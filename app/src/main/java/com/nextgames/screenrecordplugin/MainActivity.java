@@ -32,14 +32,15 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Snackbar.make(view, "Started screen recording", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                if (!mScreenRecorder.IsRecording()) mScreenRecorder.StartMediaRecording();
-                else mScreenRecorder.StopMediaRecording();
+                if (!ScreenRecorder.IsRecording()) ScreenRecorder.StartMediaRecording();
+                else ScreenRecorder.StopMediaRecording();
             }
         });
 
-        mScreenRecorder = new ScreenRecorder();
-        mScreenRecorder.SetActivity(this);
-        mScreenRecorder.RequestPermissions();
+        mScreenRecorder = new ScreenRecorder(this);
+
+        ScreenRecorder.RequestPermissions();
+        ScreenRecorder.SetOutputFileName("video3.mp4");
     }
 
     @Override
@@ -65,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(TAG, "Got activity result " + resultCode );
         mScreenRecorder.onActivityResult(requestCode, resultCode, data);
     }
 }

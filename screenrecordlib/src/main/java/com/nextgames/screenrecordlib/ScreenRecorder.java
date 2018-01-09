@@ -50,12 +50,18 @@ public class ScreenRecorder {
     }
 
     private static Activity sourceActivity;
-    private boolean isRecording;
-    private String outputFileName;
+    private static boolean isRecording;
+    private static String outputFileName;
+    private static ScreenRecorder sInstance;
 
-    //// Public methods for unity & test app interfacing
+    public ScreenRecorder(Activity a) {
+        sourceActivity = a;
+        sInstance = this;
+    }
 
-    public void RequestPermissions() {
+    //// Public static methods for unity interfacing
+
+    public static void RequestPermissions() {
         if (ContextCompat.checkSelfPermission(sourceActivity,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE) + ContextCompat
                 .checkSelfPermission(sourceActivity, Manifest.permission.RECORD_AUDIO)
@@ -77,28 +83,24 @@ public class ScreenRecorder {
         }
     }
 
-    public void SetActivity(Activity a) {
-        sourceActivity = a;
+    public static void StartMediaRecording() {
+        sInstance.setup();
+        sInstance.initRecorder();
+        sInstance.shareScreen();
     }
 
-    public void StartMediaRecording() {
-        setup();
-        initRecorder();
-        shareScreen();
+    public static void StopMediaRecording() {
+        sInstance.mMediaRecorder.stop();
+        sInstance.mMediaRecorder.reset();
+        sInstance.stopScreenSharing();
     }
 
-    public void StopMediaRecording() {
-        mMediaRecorder.stop();
-        mMediaRecorder.reset();
-        stopScreenSharing();
-    }
-
-    public void SetOutputFileName(String f)
+    public static void SetOutputFileName(String f)
     {
         outputFileName = f;
     }
 
-    public boolean IsRecording() {
+    public static boolean IsRecording() {
         return isRecording;
     }
 
@@ -116,8 +118,7 @@ public class ScreenRecorder {
             return;
         }
         if (resultCode != RESULT_OK) {
-            //Toast.makeText(this, "Screen Cast Permission Denied", Toast.LENGTH_SHORT).show();
-            //mToggleButton.setChecked(false);
+            Log.e(TAG, "Screen cast permission denied! " + resultCode);
             return;
         }
         Log.d(TAG, "Starting media recording");
@@ -168,7 +169,7 @@ public class ScreenRecorder {
             mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
             mMediaRecorder.setOutputFile(Environment
                     .getExternalStoragePublicDirectory(Environment
-                            .DIRECTORY_PICTURES) + "/video.mp4");
+                            .DIRECTORY_DOWNLOADS) + "/" + outputFileName);
             mMediaRecorder.setVideoSize(DISPLAY_WIDTH, DISPLAY_HEIGHT);
             mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
             mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
@@ -211,7 +212,7 @@ public class ScreenRecorder {
             mMediaProjection.unregisterCallback(mMediaProjectionCallback);
             mMediaProjection.stop();
             mMediaProjection = null;
+            Log.i(TAG, "MediaProjection Stopped");
         }
-        Log.i(TAG, "MediaProjection Stopped");
     }
 }
