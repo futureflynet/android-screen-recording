@@ -23,6 +23,7 @@ public class ScreenRecorderUnityPlayerActivity extends UnityPlayerActivity {
         Log.d("UnityPlayerActivityOvr", "Created screen recorder instance");
     }
 
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         mScreenRecorder.onActivityResult(requestCode, resultCode, data);
     }

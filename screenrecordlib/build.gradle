@@ -30,5 +30,5 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
-    implementation files('/Applications/Unity-2017.3.0f2/PlaybackEngines/AndroidPlayer/Variations/mono/Release/Classes/classes.jar')
+    provided files('/Applications/Unity-2017.3.0f2/PlaybackEngines/AndroidPlayer/Variations/mono/Release/Classes/classes.jar')
 }
