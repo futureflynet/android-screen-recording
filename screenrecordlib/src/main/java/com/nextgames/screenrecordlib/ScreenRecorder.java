@@ -123,6 +123,14 @@ public class ScreenRecorder {
     {
         sInstance.shareVideo(sInstance.outputFileName, GetVideoFileName());
     }
+
+    public static void OpenVideoPlayer()
+    {
+        sourceActivity.startActivity(new Intent(sourceActivity, VideoViewActivity.class));
+    }
+
+    public static Activity GetSourceActivity() { return sourceActivity; }
+
     //// Android glue
 
     /**

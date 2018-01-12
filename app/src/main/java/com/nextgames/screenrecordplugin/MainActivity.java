@@ -2,6 +2,7 @@ package com.nextgames.screenrecordplugin;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -32,15 +33,27 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Snackbar.make(view, "Started screen recording", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                if (!ScreenRecorder.IsRecording()) ScreenRecorder.StartMediaRecording();
-                else ScreenRecorder.StopMediaRecording();
+                if (!ScreenRecorder.IsRecording()) {
+                    ScreenRecorder.StartMediaRecording();
+                } else {
+                    ScreenRecorder.StopMediaRecording();
+                    final Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            ScreenRecorder.OpenVideoPlayer();
+                        }
+                    }, 1000);
+
+                }
             }
         });
 
         mScreenRecorder = new ScreenRecorder(this);
 
         ScreenRecorder.RequestPermissions();
-        ScreenRecorder.SetOutputFileName("video3.mp4");
+        ScreenRecorder.SetOutputFileName("video4.mp4");
+        Log.d(TAG,"Output file name is " + ScreenRecorder.GetVideoFileName());
     }
 
     @Override

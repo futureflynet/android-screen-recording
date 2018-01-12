@@ -31,4 +31,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     provided files('/Applications/Unity2017.3.0f3/PlaybackEngines/AndroidPlayer/Variations/mono/Release/Classes/classes.jar')
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
 }
