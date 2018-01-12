@@ -65,10 +65,7 @@ public class ScreenRecorder {
     //// Public static methods for unity interfacing
 
     public static void RequestPermissions() {
-        if (ContextCompat.checkSelfPermission(sourceActivity,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) + ContextCompat
-                .checkSelfPermission(sourceActivity, Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
+        if (!IsPermissionsGranted()) {
             if (ActivityCompat.shouldShowRequestPermissionRationale
                     (sourceActivity, Manifest.permission.WRITE_EXTERNAL_STORAGE) ||
                     ActivityCompat.shouldShowRequestPermissionRationale
@@ -84,6 +81,14 @@ public class ScreenRecorder {
         } else {
             // All permissions have been granted
         }
+    }
+
+    public static boolean IsPermissionsGranted()
+    {
+        return ContextCompat.checkSelfPermission(sourceActivity,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) + ContextCompat
+                .checkSelfPermission(sourceActivity, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     public static void StartMediaRecording() {
