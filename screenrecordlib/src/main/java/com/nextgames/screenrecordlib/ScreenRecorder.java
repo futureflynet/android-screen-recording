@@ -13,6 +13,7 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Environment;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
@@ -119,9 +120,9 @@ public class ScreenRecorder {
         sourceActivity.startActivity(intent);
     }
 
-    public static void ShareVideo()
+    public static void ShareVideo(@Nullable Activity activity)
     {
-        sInstance.shareVideo(sInstance.outputFileName, GetVideoFileName());
+        sInstance.shareVideo(activity == null ? sourceActivity : activity, sInstance.outputFileName, GetVideoFileName());
     }
 
     public static void OpenVideoPlayer()
@@ -159,9 +160,9 @@ public class ScreenRecorder {
 
     //// Internal methods
 
-    private void shareVideo(final String title, String path) {
+    private void shareVideo(final Activity activity, final String title, String path) {
 
-        MediaScannerConnection.scanFile(sourceActivity, new String[] { path },
+        MediaScannerConnection.scanFile(activity, new String[] { path },
                 null, new MediaScannerConnection.OnScanCompletedListener() {
                     public void onScanCompleted(String path, Uri uri) {
                         Intent shareIntent = new Intent(
@@ -170,9 +171,8 @@ public class ScreenRecorder {
                         shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, title);
                         shareIntent.putExtra(android.content.Intent.EXTRA_TITLE, title);
                         shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
-                        shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-                        sourceActivity.getApplicationContext().startActivity(Intent.createChooser(shareIntent,
-                                "Share Video"));
+                        shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        activity.startActivity(Intent.createChooser(shareIntent, "Share Video"));
                     }
                 });
     }

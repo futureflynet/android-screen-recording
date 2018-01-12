@@ -75,7 +75,7 @@ public class VideoViewActivity extends AppCompatActivity {
 
     public void doShare(View view)
     {
-        ScreenRecorder.ShareVideo();
+        ScreenRecorder.ShareVideo(this);
     }
 
     // When you change direction of phone, this method will be called.
