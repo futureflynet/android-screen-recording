@@ -19,15 +19,28 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!--<activity
+            android:name="com.nextgames.screenrecordlib.FullscreenVideoViewActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_fullscreen_video_view"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/FullscreenTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="MainActivity" />
+        </activity>-->
         <activity
             android:name="com.nextgames.screenrecordlib.VideoViewActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="VideoShareView"
-            android:theme="@style/AppTheme">
+            android:theme="@style/FullscreenTheme"
+            android:resizeableActivity="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
             </intent-filter>
+            <meta-data android:name="android.max_aspect" android:value="2.1" />
         </activity>
-
+        <meta-data android:name="android.max_aspect" android:value="2.1" />
     </application>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>

@@ -1,6 +1,7 @@
 package com.nextgames.screenrecordplugin;
 
 import android.content.Intent;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -34,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
                 Snackbar.make(view, "Started screen recording", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
                 if (!ScreenRecorder.IsRecording()) {
+                    ScreenRecorder.RequestPermissions();
+                    while (!ScreenRecorder.IsPermissionsGranted()) {}
                     ScreenRecorder.StartMediaRecording();
                 } else {
                     ScreenRecorder.StopMediaRecording();
@@ -49,10 +52,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Point displaySize = new Point();
+        getWindowManager().getDefaultDisplay().getRealSize(displaySize);
+
         mScreenRecorder = new ScreenRecorder(this);
 
         ScreenRecorder.RequestPermissions();
-        ScreenRecorder.SetOutputFileName("video4.mp4");
+        ScreenRecorder.SetOutputFileName("video5.mp4");
+        ScreenRecorder.SetRecordVideoDimensions(displaySize.x, displaySize.y); // HACK just assume portrait layout here
         Log.d(TAG,"Output file name is " + ScreenRecorder.GetVideoFileName());
     }
 

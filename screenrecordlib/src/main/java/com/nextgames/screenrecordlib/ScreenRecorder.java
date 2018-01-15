@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.graphics.Point;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.MediaRecorder;
@@ -36,8 +38,6 @@ public class ScreenRecorder {
     private static final String TAG = "ScreenRecorder";
     private int mScreenDensity;
     private MediaProjectionManager mProjectionManager;
-    private static final int DISPLAY_WIDTH = 720;
-    private static final int DISPLAY_HEIGHT = 1280;
     private MediaProjection mMediaProjection;
     private VirtualDisplay mVirtualDisplay;
     private MediaProjectionCallback mMediaProjectionCallback;
@@ -56,10 +56,14 @@ public class ScreenRecorder {
     private static boolean isRecording;
     private static String outputFileName;
     private static ScreenRecorder sInstance;
+    private static int recordVideoWidth;
+    private static int recordVideoHeight;
 
     public ScreenRecorder(Activity a) {
         sourceActivity = a;
         sInstance = this;
+        recordVideoWidth = 0;
+        recordVideoHeight = 0;
     }
 
     //// Public static methods for unity interfacing
@@ -91,6 +95,13 @@ public class ScreenRecorder {
                 == PackageManager.PERMISSION_GRANTED;
     }
 
+    public static void SetRecordVideoDimensions(int width, int height)
+    {
+        recordVideoWidth = width;
+        recordVideoHeight = height;
+        Log.d(TAG, "Set record video dimensions "+width+" x "+height);
+    }
+
     public static void StartMediaRecording() {
         sInstance.setup();
         sInstance.initRecorder();
@@ -99,8 +110,12 @@ public class ScreenRecorder {
 
     public static void StopMediaRecording() {
         Log.d(TAG, "Stopping media recording");
-        sInstance.mMediaRecorder.stop();
-        sInstance.mMediaRecorder.reset();
+        try {
+            sInstance.mMediaRecorder.stop();
+            sInstance.mMediaRecorder.reset();
+        } catch (RuntimeException ex) {
+            Log.e(TAG,"Error stopping media recording "+ex.getLocalizedMessage().toString());
+        }
         sInstance.stopScreenSharing();
     }
 
@@ -196,21 +211,10 @@ public class ScreenRecorder {
 
     private VirtualDisplay createVirtualDisplay() {
         return mMediaProjection.createVirtualDisplay("ScreenRecorderUnityPlayerActivity",
-                DISPLAY_WIDTH, DISPLAY_HEIGHT, mScreenDensity,
+                recordVideoWidth, recordVideoHeight, mScreenDensity,
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                 mMediaRecorder.getSurface(), null /*Callbacks*/, null
                 /*Handler*/);
-    }
-
-    private void shareScreen() {
-        if (mMediaProjection == null) {
-            sourceActivity.startActivityForResult(mProjectionManager.createScreenCaptureIntent(), REQUEST_CODE);
-            return;
-        }
-        mVirtualDisplay = createVirtualDisplay();
-        mMediaRecorder.start();
-        isRecording = true;
-        Log.d(TAG, "Media recording started");
     }
 
     private void initRecorder() {
@@ -221,7 +225,7 @@ public class ScreenRecorder {
             mMediaRecorder.setOutputFile(Environment
                     .getExternalStoragePublicDirectory(Environment
                             .DIRECTORY_DOWNLOADS) + "/" + outputFileName);
-            mMediaRecorder.setVideoSize(DISPLAY_WIDTH, DISPLAY_HEIGHT);
+            mMediaRecorder.setVideoSize(recordVideoWidth, recordVideoHeight);
             mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
             mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
             mMediaRecorder.setVideoEncodingBitRate(6 * 1024 * 1024); //6m video
@@ -234,6 +238,17 @@ public class ScreenRecorder {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void shareScreen() {
+        if (mMediaProjection == null) {
+            sourceActivity.startActivityForResult(mProjectionManager.createScreenCaptureIntent(), REQUEST_CODE);
+            return;
+        }
+        mVirtualDisplay = createVirtualDisplay();
+        mMediaRecorder.start();
+        isRecording = true;
+        Log.d(TAG, "Media recording started");
     }
 
     private class MediaProjectionCallback extends MediaProjection.Callback {
