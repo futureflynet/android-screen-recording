@@ -44,7 +44,11 @@ public class MainActivity extends AppCompatActivity {
                     handler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            ScreenRecorder.OpenVideoPlayer();
+                            if (ScreenRecorder.GetError() != ScreenRecorder.ERROR_NONE) {
+                                Log.e(TAG, "Error in screen recording " + ScreenRecorder.GetError());
+                            } else {
+                                ScreenRecorder.OpenVideoPlayer();
+                            }
                         }
                     }, 1000);
 
@@ -61,6 +65,13 @@ public class MainActivity extends AppCompatActivity {
         ScreenRecorder.SetOutputFileName("video5.mp4");
         ScreenRecorder.SetRecordVideoDimensions(displaySize.x, displaySize.y); // HACK just assume portrait layout here
         Log.d(TAG,"Output file name is " + ScreenRecorder.GetVideoFileName());
+
+        ScreenRecorder.SetErrorCallback(new Runnable() {
+            @Override
+            public void run() {
+                Log.e(TAG, "Caught error from Screen Recorder! "+ScreenRecorder.GetError());
+            }
+        });
     }
 
     @Override

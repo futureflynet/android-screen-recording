@@ -5,8 +5,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
-import android.graphics.Point;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.MediaRecorder;
@@ -15,6 +13,7 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -34,6 +33,12 @@ import static android.app.Activity.RESULT_OK;
 public class ScreenRecorder {
 
     public static final int REQUEST_CODE = 1000;
+
+    public static final int ERROR_NONE = 0;
+    public static final int ERROR_RESULTCODE = 1;
+    public static final int ERROR_RECORDER_STOP = 2;
+    public static final int ERROR_SCREENCAST = 3;
+    public static final int ERROR_RECORDER_INIT = 4;
 
     private static final String TAG = "ScreenRecorder";
     private int mScreenDensity;
@@ -58,12 +63,17 @@ public class ScreenRecorder {
     private static ScreenRecorder sInstance;
     private static int recordVideoWidth;
     private static int recordVideoHeight;
+    private static Runnable errorCallback;
+    private static int error = ERROR_NONE;
+    private static Handler errorHandler;
+
 
     public ScreenRecorder(Activity a) {
         sourceActivity = a;
         sInstance = this;
         recordVideoWidth = 0;
         recordVideoHeight = 0;
+        errorHandler = new Handler();
     }
 
     //// Public static methods for unity interfacing
@@ -103,6 +113,7 @@ public class ScreenRecorder {
     }
 
     public static void StartMediaRecording() {
+        error = ERROR_NONE;
         sInstance.setup();
         sInstance.initRecorder();
         sInstance.shareScreen();
@@ -115,6 +126,8 @@ public class ScreenRecorder {
             sInstance.mMediaRecorder.reset();
         } catch (RuntimeException ex) {
             Log.e(TAG,"Error stopping media recording "+ex.getLocalizedMessage().toString());
+            error = ERROR_RECORDER_STOP;
+            errorHandler.post(errorCallback);
         }
         sInstance.stopScreenSharing();
     }
@@ -152,6 +165,10 @@ public class ScreenRecorder {
 
     public static Activity GetSourceActivity() { return sourceActivity; }
 
+    public static void SetErrorCallback(Runnable r) { errorCallback = r; }
+
+    public static int GetError() { return error; }
+
     //// Android glue
 
     /**
@@ -163,10 +180,14 @@ public class ScreenRecorder {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode != REQUEST_CODE) {
             Log.e(TAG, "Unknown request code: " + requestCode);
+            error = ERROR_RESULTCODE;
+            errorHandler.post(errorCallback);
             return;
         }
         if (resultCode != RESULT_OK) {
             Log.e(TAG, "Screen cast permission denied! " + resultCode);
+            error = ERROR_SCREENCAST;
+            errorHandler.post(errorCallback);
             return;
         }
         Log.d(TAG, "Starting media recording");
@@ -237,6 +258,8 @@ public class ScreenRecorder {
             mMediaRecorder.prepare();
         } catch (IOException e) {
             e.printStackTrace();
+            error = ERROR_RECORDER_INIT;
+            errorHandler.post(errorCallback);
         }
     }
 
