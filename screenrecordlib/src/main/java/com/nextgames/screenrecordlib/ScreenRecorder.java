@@ -2,8 +2,12 @@ package com.nextgames.screenrecordlib;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
@@ -25,6 +29,7 @@ import android.view.Surface;
 import java.io.IOException;
 
 import static android.app.Activity.RESULT_OK;
+import static android.content.Intent.EXTRA_CHOSEN_COMPONENT;
 
 /**
  * Created by gimulnautti on 08/01/2018.
@@ -66,7 +71,8 @@ public class ScreenRecorder {
     private static Runnable errorCallback;
     private static int error = ERROR_NONE;
     private static Handler errorHandler;
-
+    private static Runnable sharedCallback;
+    private static String sharedActivity;
 
     public ScreenRecorder(Activity a) {
         sourceActivity = a;
@@ -167,7 +173,11 @@ public class ScreenRecorder {
 
     public static void SetErrorCallback(Runnable r) { errorCallback = r; }
 
+    public static void SetSharedCallback(Runnable r) { sharedCallback = r; }
+
     public static int GetError() { return error; }
+
+    public static String GetSharedActivity() { return sharedActivity; }
 
     //// Android glue
 
@@ -201,6 +211,20 @@ public class ScreenRecorder {
 
     //// Internal methods
 
+    /**
+     * Receive chosen component from ACTION_SEND
+     */
+    private class Receiver extends BroadcastReceiver
+    {
+        @Override
+        public void onReceive(Context arg0, Intent arg1) {
+            sharedActivity = arg1.getExtras().getParcelable(EXTRA_CHOSEN_COMPONENT).toString();
+            Log.d(TAG, "Share activity result received: "+sharedActivity);
+            final Handler handler = new Handler();
+            handler.post(sharedCallback);
+        }
+    }
+
     private void shareVideo(final Activity activity, final String title, String path) {
 
         MediaScannerConnection.scanFile(activity, new String[] { path },
@@ -213,7 +237,12 @@ public class ScreenRecorder {
                         shareIntent.putExtra(android.content.Intent.EXTRA_TITLE, title);
                         shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
                         shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET | Intent.FLAG_ACTIVITY_NEW_TASK);
-                        activity.startActivity(Intent.createChooser(shareIntent, "Share Video"));
+
+                        Intent receiver = new Intent("com.nextgames.screenrecordlib.ShareReceiver");
+                        PendingIntent pendingIntent = PendingIntent.getBroadcast(sourceActivity, 0, receiver, PendingIntent.FLAG_UPDATE_CURRENT);
+                        sourceActivity.registerReceiver(new Receiver(), new IntentFilter("com.nextgames.screenrecordlib.ShareReceiver"));
+
+                        activity.startActivity(Intent.createChooser(shareIntent, "Share Video", pendingIntent.getIntentSender()));
                     }
                 });
     }
@@ -226,8 +255,7 @@ public class ScreenRecorder {
 
         mMediaRecorder = new MediaRecorder();
 
-        mProjectionManager = (MediaProjectionManager)
-                sourceActivity.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+        mProjectionManager = (MediaProjectionManager) sourceActivity.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
     }
 
     private VirtualDisplay createVirtualDisplay() {
@@ -249,7 +277,7 @@ public class ScreenRecorder {
             mMediaRecorder.setVideoSize(recordVideoWidth, recordVideoHeight);
             mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
             mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-            mMediaRecorder.setVideoEncodingBitRate(6 * 1024 * 1024); //6m video
+            mMediaRecorder.setVideoEncodingBitRate(3 * 1024 * 1024); //3m video
             mMediaRecorder.setAudioEncodingBitRate(384 * 1024); //384k audio
             mMediaRecorder.setVideoFrameRate(30);
             int rotation = sourceActivity.getWindowManager().getDefaultDisplay().getRotation();
