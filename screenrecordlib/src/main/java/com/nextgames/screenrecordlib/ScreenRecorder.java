@@ -4,10 +4,12 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
+import android.content.pm.ComponentInfo;
 import android.content.pm.PackageManager;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
@@ -18,6 +20,7 @@ import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -218,7 +221,9 @@ public class ScreenRecorder {
     {
         @Override
         public void onReceive(Context arg0, Intent arg1) {
-            sharedActivity = arg1.getExtras().getParcelable(EXTRA_CHOSEN_COMPONENT).toString();
+            //sharedActivity = arg1.getExtras().getParcelable(EXTRA_CHOSEN_COMPONENT).toString();
+            ComponentName chosenComponent = arg1.getParcelableExtra(EXTRA_CHOSEN_COMPONENT);
+            sharedActivity = chosenComponent.flattenToString();
             Log.d(TAG, "Share activity result received: "+sharedActivity);
             final Handler handler = new Handler();
             handler.post(sharedCallback);
